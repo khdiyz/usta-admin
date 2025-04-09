@@ -1,4 +1,3 @@
-// src/pages/countries/CountryListPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,7 +5,7 @@ import { FaTrashAlt, FaPlus, FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAng
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/countries`;
+const API_URL = `${import.meta.env.VITE_API_URL}/services`;
 
 // Sahifa raqamlarini generatsiya qilish
 const generatePageNumbers = (currentPage, totalPages, maxVisiblePages = 7) => {
@@ -40,8 +39,8 @@ const generatePageNumbers = (currentPage, totalPages, maxVisiblePages = 7) => {
   return [...new Set(pages)];
 };
 
-function CountryListPage() {
-  const [countries, setCountries] = useState([]);
+function ServiceListPage() {
+  const [services, setServices] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, pageCount: 1, totalCount: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,12 +69,12 @@ function CountryListPage() {
     return response.status === 204 ? null : response.json();
   }, [token]);
 
-  const fetchCountries = useCallback(async (page = 1, limit = 10) => {
+  const fetchServices = useCallback(async (page = 1, limit = 10) => {
     setLoading(true);
     setError(null);
     try {
       const result = await makeApiCall(`${API_URL}?limit=${limit}&page=${page}`, { method: 'GET' });
-      setCountries(result.data || []);
+      setServices(result.data || []);
       setPagination(prev => ({
         ...prev,
         page: result.pagination?.page || 1,
@@ -83,9 +82,9 @@ function CountryListPage() {
         totalCount: result.pagination?.totalCount || 0,
       }));
     } catch (err) {
-      console.error("Mamlakatlarni yuklashda xatolik:", err);
+      console.error("Xizmatlarni yuklashda xatolik:", err);
       setError(err.message);
-      setCountries([]);
+      setServices([]);
       setPagination({ page: 1, limit: 10, pageCount: 1, totalCount: 0 });
     } finally {
       setLoading(false);
@@ -93,37 +92,72 @@ function CountryListPage() {
   }, [makeApiCall]);
 
   useEffect(() => {
-    fetchCountries(pagination.page, pagination.limit);
-  }, [fetchCountries, pagination.page, pagination.limit]);
+    fetchServices(pagination.page, pagination.limit);
+  }, [fetchServices, pagination.page, pagination.limit]);
 
-  const handleDelete = async (countryId) => {
+  const handleDelete = useCallback(async (serviceId, serviceName) => {
+    const toastId = toast.loading("O'chirilmoqda...");
     try {
-      await makeApiCall(`${API_URL}/${countryId}`, { method: 'DELETE' });
-      toast.success('Mamlakat muvaffaqiyatli o\'chirildi');
-      fetchCountries(pagination.page, pagination.limit);
+      await makeApiCall(`${API_URL}/${serviceId}`, { method: 'DELETE' });
+      toast.success(`'${serviceName?.uz || serviceId}' muvaffaqiyatli o'chirildi.`, { id: toastId });
+      
+      if (services.length === 1) {
+        if (pagination.page > 1) {
+          handlePageChange(pagination.page - 1);
+        } else {
+          fetchServices(1, pagination.limit);
+        }
+      } else {
+        setServices(prev => prev.filter(service => service.id !== serviceId));
+        setPagination(prev => ({
+          ...prev,
+          totalCount: Math.max(0, prev.totalCount - 1)
+        }));
+      }
     } catch (err) {
-      toast.error(err.message);
+      console.error("O'chirishda xatolik:", err);
+      toast.error(`O'chirishda xatolik: ${err.message}`, { id: toastId });
     }
+  }, [makeApiCall, services.length, pagination.page, pagination.limit, fetchServices]);
+
+  const handleDeleteClick = (e, serviceId, serviceName) => {
+    e.stopPropagation();
+    showModal({
+      type: 'confirm',
+      title: 'O\'chirishni tasdiqlang',
+      message: `'${serviceName?.uz || serviceId}' nomli xizmatni haqiqatan ham o'chirmoqchimisiz?`,
+      confirmText: 'Ha, o\'chirish',
+      cancelText: 'Yo\'q, bekor qilish',
+      onConfirm: () => handleDelete(serviceId, serviceName),
+    });
+  };
+
+  const handleRowClick = (serviceId) => {
+    navigate(`/services/edit/${serviceId}`);
   };
 
   const handlePageChange = (newPage) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
+    if (newPage >= 1 && newPage <= pagination.pageCount && newPage !== pagination.page) {
+      setPagination(prev => ({ ...prev, page: newPage }));
+    }
   };
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-full">Yuklanmoqda...</div>;
+  if (loading && services.length === 0) {
+    return <div className="p-6 text-center text-gray-500">Yuklanmoqda...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500 text-center p-4">{error}</div>;
+    return <div className="p-6 text-center text-red-500">Xatolik: {error}</div>;
   }
+
+  const pageNumbers = generatePageNumbers(pagination.page, pagination.pageCount);
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Mamlakatlar</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Xizmatlar Ro'yxati</h1>
         <Link
-          to="/countries/create"
+          to="/services/create"
           className="bg-black hover:bg-gray-800 text-white py-2 px-4 rounded inline-flex items-center transition duration-150 ease-in-out"
         >
           <FaPlus className="mr-2" /> Yangi qo'shish
@@ -138,42 +172,34 @@ function CountryListPage() {
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomi (UZ)</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomi (RU)</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomi (EN)</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoriya</th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amallar</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {countries.length === 0 ? (
+            {services.length === 0 ? (
               <tr>
-                <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                  Mamlakatlar topilmadi.
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  Xizmatlar topilmadi.
                 </td>
               </tr>
             ) : (
-              countries.map((country, index) => {
+              services.map((service, index) => {
                 const rowNumber = (pagination.page - 1) * pagination.limit + index + 1;
                 return (
                   <tr
-                    key={country.id}
+                    key={service.id}
                     className="hover:bg-gray-100 cursor-pointer transition duration-150 ease-in-out"
-                    onClick={() => navigate(`/countries/edit/${country.id}`)}
+                    onClick={() => handleRowClick(service.id)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">{rowNumber}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{country.name?.uz || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{country.name?.ru || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{country.name?.en || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{service.name?.uz || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{service.name?.ru || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{service.name?.en || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{service.category?.name?.uz || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          showModal({
-                            type: 'confirm',
-                            title: 'O\'chirishni tasdiqlang',
-                            message: `'${country.name?.uz || country.id}' nomli mamlakatni haqiqatan ham o'chirmoqchimisiz?`,
-                            confirmText: 'Ha, o\'chirish',
-                            cancelText: 'Yo\'q, bekor qilish',
-                            onConfirm: () => handleDelete(country.id),
-                          });
-                        }}
+                        onClick={(e) => handleDeleteClick(e, service.id, service.name)}
                         title="O'chirish"
                         className="text-gray-600 hover:text-red-600 inline-block p-1 cursor-pointer"
                       >
@@ -188,7 +214,6 @@ function CountryListPage() {
         </table>
       </div>
 
-      {/* Pagination Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-center mt-6 text-sm space-y-2 sm:space-y-0">
         <p className="text-gray-600">
           Jami: {pagination.totalCount} ta {pagination.pageCount > 1 ? `(Sahifa ${pagination.page} / ${pagination.pageCount})` : ''}
@@ -213,7 +238,7 @@ function CountryListPage() {
               <FaAngleLeft size={16} />
             </button>
 
-            {generatePageNumbers(pagination.page, pagination.pageCount).map((page, index) => (
+            {pageNumbers.map((page, index) => (
               <React.Fragment key={index}>
                 {page === '...' ? (
                   <span className="px-3 py-1 text-gray-500">...</span>
@@ -256,4 +281,4 @@ function CountryListPage() {
   );
 }
 
-export default CountryListPage;
+export default ServiceListPage;

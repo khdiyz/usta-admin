@@ -28,6 +28,9 @@ import DistrictEditPage from './pages/districts/DistrictEditPage';
 import CategoryListPage from './pages/categories/CategoryListPage';
 import CategoryCreatePage from './pages/categories/CategoryCreatePage';
 import CategoryEditPage from './pages/categories/CategoryEditPage';
+import ServiceListPage from './pages/services/ServiceListPage';
+import ServiceCreatePage from './pages/services/ServiceCreatePage';
+import ServiceEditPage from './pages/services/ServiceEditPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const router = createBrowserRouter([
@@ -58,6 +61,14 @@ const router = createBrowserRouter([
           { index: true, element: <CategoryListPage /> },
           { path: 'create', element: <CategoryCreatePage /> },
           { path: 'edit/:categoryId', element: <CategoryEditPage /> },
+        ],
+      },
+      {
+        path: 'services',
+        children: [
+          { index: true, element: <ServiceListPage /> },
+          { path: 'create', element: <ServiceCreatePage /> },
+          { path: 'edit/:serviceId', element: <ServiceEditPage /> },
         ],
       },
       {

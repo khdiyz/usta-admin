@@ -122,7 +122,7 @@ function CategoryListPage() {
   return (
     <div className="p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Kategoriyalar</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Kategoriyalar</h1>
         <Link
           to="/categories/create"
           className="bg-black hover:bg-gray-800 text-white py-2 px-4 rounded inline-flex items-center transition duration-150 ease-in-out"
