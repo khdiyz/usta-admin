@@ -44,7 +44,6 @@ function UserListPage() {
       confirmText: 'Ha, o\'chirish',
       cancelText: 'Yo\'q, bekor qilish',
       onConfirm: () => { // Tasdiqlanganda bajariladigan amal
-        console.log('Deleting user with id:', userId);
         // Haqiqiy API chaqiruvi (DELETE /api/users/:id) o'rniga:
         setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
         // Muvaffaqiyatli o'chirilganlik haqida xabar berish (yana modal orqali)

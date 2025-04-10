@@ -24,6 +24,7 @@ function CategoryListPage() {
     { header: 'Nomi (EN)', field: 'name.en' },
     { 
       header: 'Ikonka', 
+      align: 'center',
       cell: (row) => {
         const iconId = row.icon;
         const iconUrl = iconId ? `${FILE_URL}/${iconId}` : null;
@@ -80,19 +81,8 @@ function CategoryListPage() {
     try {
       await deleteData(API_URL, category.id, category.name);
       
-      if (categories.length === 1) {
-        if (pagination.page > 1) {
-          setPagination(prev => ({ ...prev, page: prev.page - 1 }));
-        } else {
-          fetchCategories(1, pagination.limit);
-        }
-      } else {
-        setCategories(prev => prev.filter(c => c.id !== category.id));
-        setPagination(prev => ({
-          ...prev,
-          totalCount: Math.max(0, prev.totalCount - 1)
-        }));
-      }
+      // After deleting, always refresh the current page data
+      fetchCategories(pagination.page, pagination.limit);
     } catch (err) {
       console.error("O'chirishda xatolik:", err);
     }
@@ -141,13 +131,11 @@ function CategoryListPage() {
         emptyMessage="Kategoriyalar topilmadi."
       />
 
-      {pagination.pageCount > 1 && (
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={pagination.pageCount}
-          onPageChange={handlePageChange}
-        />
-      )}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.pageCount}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

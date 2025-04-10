@@ -28,9 +28,7 @@ function CountryListPage() {
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching countries from:', `${API_URL}?limit=${limit}&page=${page}`);
       const result = await fetchData(API_URL, page, limit);
-      console.log('Received data:', result);
       setCountries(result.data);
       setPagination(result.pagination);
     } catch (err) {
@@ -44,7 +42,6 @@ function CountryListPage() {
   };
 
   useEffect(() => {
-    console.log('API URL:', API_URL);
     fetchCountries(pagination.page, pagination.limit);
   }, [pagination.page, pagination.limit]);
 
@@ -52,19 +49,8 @@ function CountryListPage() {
     try {
       await deleteData(API_URL, country.id, country.name);
       
-      if (countries.length === 1) {
-        if (pagination.page > 1) {
-          setPagination(prev => ({ ...prev, page: prev.page - 1 }));
-        } else {
-          fetchCountries(1, pagination.limit);
-        }
-      } else {
-        setCountries(prev => prev.filter(c => c.id !== country.id));
-        setPagination(prev => ({
-          ...prev,
-          totalCount: Math.max(0, prev.totalCount - 1)
-        }));
-      }
+      // After deleting, always refresh the current page data
+      fetchCountries(pagination.page, pagination.limit);
     } catch (err) {
       console.error("O'chirishda xatolik:", err);
     }
@@ -113,13 +99,11 @@ function CountryListPage() {
         emptyMessage="Mamlakatlar topilmadi."
       />
 
-      {pagination.pageCount > 1 && (
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={pagination.pageCount}
-          onPageChange={handlePageChange}
-        />
-      )}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.pageCount}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

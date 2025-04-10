@@ -33,9 +33,7 @@ function ProductListPage() {
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching products from:', `${API_URL}?limit=${limit}&page=${page}`);
       const result = await fetchData(API_URL, page, limit);
-      console.log('Received data:', result);
       setProducts(result.data);
       setPagination(result.pagination);
     } catch (err) {
@@ -49,7 +47,6 @@ function ProductListPage() {
   };
 
   useEffect(() => {
-    console.log('API URL:', API_URL);
     fetchProducts(pagination.page, pagination.limit);
   }, [pagination.page, pagination.limit]);
 

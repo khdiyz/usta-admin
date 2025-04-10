@@ -57,9 +57,8 @@ const Table = ({
             </tr>
           ) : (
             data.map((item, index) => {
-              const rowNumberValue = pagination
-                ? (pagination.page - 1) * pagination.limit + index + 1
-                : index + 1;
+              // Always use index + 1 for the row number, regardless of pagination
+              const rowNumberValue = index + 1;
 
               return (
                 <tr

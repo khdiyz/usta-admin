@@ -29,9 +29,7 @@ function DistrictListPage() {
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching districts from:', `${API_URL}?limit=${limit}&page=${page}`);
       const result = await fetchData(API_URL, page, limit);
-      console.log('Received data:', result);
       setDistricts(result.data);
       setPagination(result.pagination);
     } catch (err) {
@@ -45,7 +43,6 @@ function DistrictListPage() {
   };
 
   useEffect(() => {
-    console.log('API URL:', API_URL);
     fetchDistricts(pagination.page, pagination.limit);
   }, [pagination.page, pagination.limit]);
 
@@ -53,19 +50,8 @@ function DistrictListPage() {
     try {
       await deleteData(API_URL, district.id, district.name);
       
-      if (districts.length === 1) {
-        if (pagination.page > 1) {
-          setPagination(prev => ({ ...prev, page: prev.page - 1 }));
-        } else {
-          fetchDistricts(1, pagination.limit);
-        }
-      } else {
-        setDistricts(prev => prev.filter(d => d.id !== district.id));
-        setPagination(prev => ({
-          ...prev,
-          totalCount: Math.max(0, prev.totalCount - 1)
-        }));
-      }
+      // After deleting, always refresh the current page data
+      fetchDistricts(pagination.page, pagination.limit);
     } catch (err) {
       console.error("O'chirishda xatolik:", err);
     }
@@ -114,13 +100,11 @@ function DistrictListPage() {
         emptyMessage="Tumanlar topilmadi."
       />
 
-      {pagination.pageCount > 1 && (
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={pagination.pageCount}
-          onPageChange={handlePageChange}
-        />
-      )}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.pageCount}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

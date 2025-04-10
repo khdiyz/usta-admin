@@ -28,9 +28,7 @@ function RegionListPage() {
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching regions from:', `${API_URL}?limit=${limit}&page=${page}`);
       const result = await fetchData(API_URL, page, limit);
-      console.log('Received data:', result);
       setRegions(result.data);
       setPagination(result.pagination);
     } catch (err) {
@@ -44,7 +42,6 @@ function RegionListPage() {
   };
 
   useEffect(() => {
-    console.log('API URL:', API_URL);
     fetchRegions(pagination.page, pagination.limit);
   }, [pagination.page, pagination.limit]);
 
@@ -52,19 +49,8 @@ function RegionListPage() {
     try {
       await deleteData(API_URL, region.id, region.name);
       
-      if (regions.length === 1) {
-        if (pagination.page > 1) {
-          setPagination(prev => ({ ...prev, page: prev.page - 1 }));
-        } else {
-          fetchRegions(1, pagination.limit);
-        }
-      } else {
-        setRegions(prev => prev.filter(r => r.id !== region.id));
-        setPagination(prev => ({
-          ...prev,
-          totalCount: Math.max(0, prev.totalCount - 1)
-        }));
-      }
+      // After deleting, always refresh the current page data
+      fetchRegions(pagination.page, pagination.limit);
     } catch (err) {
       console.error("O'chirishda xatolik:", err);
     }
@@ -113,13 +99,11 @@ function RegionListPage() {
         emptyMessage="Viloyatlar topilmadi."
       />
 
-      {pagination.pageCount > 1 && (
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={pagination.pageCount}
-          onPageChange={handlePageChange}
-        />
-      )}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.pageCount}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

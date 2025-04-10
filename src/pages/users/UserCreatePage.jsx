@@ -26,13 +26,11 @@ function UserCreatePage() {
     setError(null);
 
     // Haqiqiy API chaqiruvi (POST /api/users) simulyatsiyasi
-    console.log('Submitting new user data:', formData);
     setTimeout(() => {
       // Tasavvur qiling, API dan javob keldi
       const isSuccess = Math.random() > 0.1; // 90% muvaffaqiyat ehtimoli
 
       if (isSuccess) {
-        console.log('User created successfully!');
         // Muvaffaqiyatli bo'lsa ro'yxat sahifasiga qaytish
         navigate('/users');
         // Bu yerda muvaffaqiyatli yaratilganlik haqida xabar ko'rsatish mumkin

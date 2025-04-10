@@ -22,7 +22,6 @@ function UserEditPage() {
     setLoading(true);
     setError(null);
     setNotFound(false);
-    console.log('Fetching user with id:', userId);
 
     // Haqiqiy API chaqiruvi (GET /api/users/:id) simulyatsiyasi
     setTimeout(() => {
@@ -58,15 +57,12 @@ function UserEditPage() {
     setError(null);
 
     // Haqiqiy API chaqiruvi (PUT /api/users/:id) simulyatsiyasi
-    console.log('Submitting updated user data for id:', userId, formData);
     setTimeout(() => {
       const isSuccess = Math.random() > 0.1; // 90% muvaffaqiyat
 
       if (isSuccess) {
-        console.log('User updated successfully!');
         navigate('/users'); // Ro'yxatga qaytish
       } else {
-        console.error('Failed to update user');
         setError('Foydalanuvchini yangilashda xatolik yuz berdi.');
         setIsSubmitting(false);
       }

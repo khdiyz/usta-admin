@@ -118,7 +118,6 @@ function CategoryEditPage() {
       })
       .then(response => response.json())
       .then(data => {
-        console.log('File uploaded, ID:', data.id);
         setFormData(prev => ({
           ...prev,
           iconId: data.id
