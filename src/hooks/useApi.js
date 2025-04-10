@@ -55,11 +55,11 @@ const useApi = () => {
     }
   }, [makeApiCall]);
 
-  const deleteData = useCallback(async (url, id, name) => {
+  const deleteData = useCallback(async (url, id) => {
     const toastId = toast.loading("O'chirilmoqda...");
     try {
       await makeApiCall(`${url}/${id}`, { method: 'DELETE' });
-      toast.success(`'${name?.uz || id}' muvaffaqiyatli o'chirildi.`, { id: toastId });
+      toast.success(`muvaffaqiyatli o'chirildi.`, { id: toastId });
       return true;
     } catch (err) {
       console.error("O'chirishda xatolik:", err);
