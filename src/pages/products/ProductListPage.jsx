@@ -6,11 +6,11 @@ import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import PageHeader from '../../components/common/PageHeader';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/categories`;
+const API_URL = `${import.meta.env.VITE_API_URL}/products`;
 const FILE_URL = import.meta.env.VITE_FILE_URL;
 
-function CategoryListPage() {
-  const [categories, setCategories] = useState([]);
+function ProductListPage() {
+  const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, pageCount: 1, totalCount: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,53 +19,29 @@ function CategoryListPage() {
   const navigate = useNavigate();
 
   const columns = [
+    { header: 'Rasm', field: 'image', type: 'image', baseUrl: FILE_URL },
     { header: 'Nomi (UZ)', field: 'name.uz' },
     { header: 'Nomi (RU)', field: 'name.ru' },
     { header: 'Nomi (EN)', field: 'name.en' },
-    { 
-      header: 'Ikonka', 
-      cell: (row) => {
-        const iconId = row.icon;
-        const iconUrl = iconId ? `${FILE_URL}/${iconId}` : null;
-        
-        return (
-          <div className="flex items-center justify-center">
-            {iconUrl ? (
-              <img 
-                src={iconUrl}
-                alt="Category icon" 
-                className="w-8 h-8 object-contain"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.style.display = 'none';
-                  const fallbackElement = document.createElement('span');
-                  fallbackElement.textContent = '-';
-                  fallbackElement.className = 'text-gray-400';
-                  if (e.target.parentElement) {
-                    e.target.parentElement.appendChild(fallbackElement);
-                  }
-                }}
-              />
-            ) : (
-              <span className="text-gray-400">-</span>
-            )}
-          </div>
-        );
-      }
-    }
+    { header: 'Kategoriya', field: 'category.name.uz' },
+    { header: 'Pastki Kategoriya', field: 'subcategory.name.uz' },
+    { header: 'Narx', field: 'price', type: 'number' },
+    { header: 'Status', field: 'status' }
   ];
 
-  const fetchCategories = async (page = 1, limit = 10) => {
+  const fetchProducts = async (page = 1, limit = 10) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('Fetching products from:', `${API_URL}?limit=${limit}&page=${page}`);
       const result = await fetchData(API_URL, page, limit);
-      setCategories(result.data);
+      console.log('Received data:', result);
+      setProducts(result.data);
       setPagination(result.pagination);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      console.error('Error fetching products:', err);
       setError(err.message);
-      setCategories([]);
+      setProducts([]);
       setPagination({ page: 1, limit: 10, pageCount: 1, totalCount: 0 });
     } finally {
       setLoading(false);
@@ -73,21 +49,22 @@ function CategoryListPage() {
   };
 
   useEffect(() => {
-    fetchCategories(pagination.page, pagination.limit);
+    console.log('API URL:', API_URL);
+    fetchProducts(pagination.page, pagination.limit);
   }, [pagination.page, pagination.limit]);
 
-  const handleDelete = async (category) => {
+  const handleDelete = async (product) => {
     try {
-      await deleteData(API_URL, category.id, category.name);
+      await deleteData(API_URL, product.id, product.name);
       
-      if (categories.length === 1) {
+      if (products.length === 1) {
         if (pagination.page > 1) {
           setPagination(prev => ({ ...prev, page: prev.page - 1 }));
         } else {
-          fetchCategories(1, pagination.limit);
+          fetchProducts(1, pagination.limit);
         }
       } else {
-        setCategories(prev => prev.filter(c => c.id !== category.id));
+        setProducts(prev => prev.filter(p => p.id !== product.id));
         setPagination(prev => ({
           ...prev,
           totalCount: Math.max(0, prev.totalCount - 1)
@@ -98,19 +75,19 @@ function CategoryListPage() {
     }
   };
 
-  const handleDeleteClick = (category) => {
+  const handleDeleteClick = (product) => {
     showModal({
       type: 'confirm',
       title: 'O\'chirishni tasdiqlang',
-      message: `'${category.name?.uz || category.id}' nomli kategoriyani haqiqatan ham o'chirmoqchimisiz?`,
+      message: `'${product.name?.uz || product.id}' nomli mahsulotni haqiqatan ham o'chirmoqchimisiz?`,
       confirmText: 'Ha, o\'chirish',
       cancelText: 'Yo\'q, bekor qilish',
-      onConfirm: () => handleDelete(category),
+      onConfirm: () => handleDelete(product),
     });
   };
 
-  const handleRowClick = (categoryId) => {
-    navigate(`/categories/edit/${categoryId}`);
+  const handleRowClick = (productId) => {
+    navigate(`/products/edit/${productId}`);
   };
 
   const handlePageChange = (newPage) => {
@@ -119,7 +96,7 @@ function CategoryListPage() {
     }
   };
 
-  if (loading && categories.length === 0) {
+  if (loading && products.length === 0) {
     return <div className="p-6 text-center text-gray-500">Yuklanmoqda...</div>;
   }
 
@@ -129,16 +106,16 @@ function CategoryListPage() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Kategoriyalar Ro'yxati" createLink="/categories/create" />
+      <PageHeader title="Mahsulotlar Ro'yxati" createLink="/products/create" />
       
       <Table
         columns={columns}
-        data={categories}
+        data={products}
         onRowClick={handleRowClick}
         onDelete={handleDeleteClick}
         rowNumber
         pagination={pagination}
-        emptyMessage="Kategoriyalar topilmadi."
+        emptyMessage="Mahsulotlar topilmadi."
       />
 
       {pagination.pageCount > 1 && (
@@ -152,4 +129,4 @@ function CategoryListPage() {
   );
 }
 
-export default CategoryListPage;
+export default ProductListPage; 

@@ -13,15 +13,9 @@ function DistrictEditPage() {
   const { token } = useAuth();
   const [formData, setFormData] = useState({
     name: { uz: '', ru: '', en: '' },
-    country: {
-      id: '',
-      name: { uz: '', ru: '', en: '' }
-    },
-    region: {
-      id: '',
-      name: { uz: '', ru: '', en: '' }
-    }
+    regionId: ''
   });
+  const [selectedCountryId, setSelectedCountryId] = useState('');
   const [countries, setCountries] = useState([]);
   const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,96 +44,83 @@ function DistrictEditPage() {
     }
   }, [token]);
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const result = await makeApiCall(`${COUNTRIES_API_URL}?limit=100`, { method: 'GET' });
-        setCountries(result.data || []);
-      } catch (err) {
-        console.error("Davlatlarni yuklashda xatolik:", err);
-        setError(err.message);
-      }
-    };
+  const fetchCountries = async () => {
+    try {
+      const result = await makeApiCall(`${COUNTRIES_API_URL}?limit=100`, { method: 'GET' });
+      setCountries(result.data || []);
+    } catch (err) {
+      console.error("Davlatlarni yuklashda xatolik:", err);
+      setError(err.message);
+    }
+  };
 
-    fetchCountries();
-  }, [makeApiCall]);
+  const fetchRegions = async (countryId) => {
+    try {
+      const url = countryId 
+        ? `${REGIONS_API_URL}?countryId=${countryId}&limit=100`
+        : `${REGIONS_API_URL}?limit=100`;
+      const result = await makeApiCall(url, { method: 'GET' });
+      setRegions(result.data || []);
+    } catch (err) {
+      console.error("Viloyatlarni yuklashda xatolik:", err);
+      setError(err.message);
+    }
+  };
 
-  useEffect(() => {
-    const fetchRegions = async () => {
-      if (!formData.country.id) {
-        setRegions([]);
-        return;
-      }
-
-      try {
-        const result = await makeApiCall(`${REGIONS_API_URL}?countryId=${formData.country.id}&limit=100`, { method: 'GET' });
-        setRegions(result.data || []);
-      } catch (err) {
-        console.error("Viloyatlarni yuklashda xatolik:", err);
-        setError(err.message);
-      }
-    };
-
-    fetchRegions();
-  }, [formData.country.id, makeApiCall]);
-
-  useEffect(() => {
-    const fetchDistrictData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await makeApiCall(`${API_URL}/${districtId}`, { method: 'GET' });
-        if (data && data.name) {
-          setFormData({
-            name: data.name,
-            country: data.country || { id: '', name: { uz: '', ru: '', en: '' } },
-            region: data.region || { id: '', name: { uz: '', ru: '', en: '' } }
-          });
-        } else {
-          throw new Error("Tuman ma'lumotlari topilmadi yoki noto'g'ri formatda.");
+  const fetchDistrictData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await makeApiCall(`${API_URL}/${districtId}`, { method: 'GET' });
+      if (data) {
+        setFormData({
+          name: data.name || { uz: '', ru: '', en: '' },
+          regionId: data.region?.id || ''
+        });
+        // Set the selected country based on the district's country
+        if (data.country?.id) {
+          setSelectedCountryId(data.country.id);
+          // Fetch regions for the selected country
+          await fetchRegions(data.country.id);
         }
-      } catch (err) {
-        console.error("Tuman ma'lumotlarini yuklashda xatolik:", err);
-        setError(err.message);
-        toast.error(err.message + " Ro'yxatga qaytilmoqda...");
-        navigate('/districts');
-      } finally {
-        setLoading(false);
+      } else {
+        throw new Error("Tuman ma'lumotlari topilmadi");
       }
-    };
+    } catch (err) {
+      console.error("Tuman ma'lumotlarini yuklashda xatolik:", err);
+      setError(err.message);
+      toast.error(err.message + " Ro'yxatga qaytilmoqda...");
+      navigate('/districts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchCountries();
     if (districtId && token) {
       fetchDistrictData();
     } else if (!token) {
       setError("Iltimos avval tizimga kiring.");
       setLoading(false);
     }
-  }, [districtId, token, makeApiCall, navigate]);
+  }, [districtId, token]);
+
+  useEffect(() => {
+    fetchRegions(selectedCountryId);
+  }, [selectedCountryId]);
+
+  const handleCountryChange = (e) => {
+    const countryId = e.target.value;
+    setSelectedCountryId(countryId);
+    // Reset region selection when country changes
+    setFormData(prev => ({ ...prev, regionId: '' }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    if (name === 'countryId') {
-      setFormData(prevData => ({
-        ...prevData,
-        country: {
-          ...prevData.country,
-          id: value
-        },
-        region: {
-          id: '',
-          name: { uz: '', ru: '', en: '' }
-        }
-      }));
-    } else if (name === 'regionId') {
-      setFormData(prevData => ({
-        ...prevData,
-        region: {
-          ...prevData.region,
-          id: value
-        }
-      }));
-    } else {
+    if (name.startsWith('name.')) {
       const lang = name.split('.')[1];
       setFormData(prevData => ({
         ...prevData,
@@ -147,6 +128,11 @@ function DistrictEditPage() {
           ...prevData.name,
           [lang]: value
         }
+      }));
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value
       }));
     }
   };
@@ -165,7 +151,6 @@ function DistrictEditPage() {
 
       toast.success("Tuman ma'lumotlari muvaffaqiyatli yangilandi!", { id: toastId });
       navigate('/districts');
-
     } catch (err) {
       console.error("Yangilashda xatolik:", err);
       toast.error(`Tumanni yangilashda xatolik yuz berdi: ${err.message}`, { id: toastId });
@@ -191,17 +176,16 @@ function DistrictEditPage() {
         {/* Davlat tanlash */}
         <div>
           <label htmlFor="countryId" className="block text-sm font-medium text-gray-700 mb-1">
-            Davlat <span className="text-red-500">*</span>
+            Davlat
           </label>
           <select
             id="countryId"
             name="countryId"
-            value={formData.country.id}
-            onChange={handleChange}
-            required
+            value={selectedCountryId}
+            onChange={handleCountryChange}
             className="w-full px-3 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-black"
           >
-            <option value="">Davlatni tanlang</option>
+            <option value="">Barcha davlatlar</option>
             {countries.map(country => (
               <option key={country.id} value={country.id}>
                 {country.name?.uz || country.id}
@@ -218,11 +202,10 @@ function DistrictEditPage() {
           <select
             id="regionId"
             name="regionId"
-            value={formData.region.id}
+            value={formData.regionId}
             onChange={handleChange}
             required
-            disabled={!formData.country.id}
-            className="w-full px-3 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-black disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-black"
           >
             <option value="">Viloyatni tanlang</option>
             {regions.map(region => (
