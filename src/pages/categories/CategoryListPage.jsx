@@ -135,6 +135,7 @@ function CategoryListPage() {
         currentPage={pagination.page}
         totalPages={pagination.pageCount}
         onPageChange={handlePageChange}
+        totalCount={pagination.totalCount}
       />
     </div>
   );
