@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
 import { useModal } from '../../context/ModalContext';
 import useApi from '../../hooks/useApi';
+import Pagination from '../../components/common/Pagination';
 
 const FILE_URL = import.meta.env.VITE_FILE_URL || 'http://localhost:4040/files';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4040/api/v1/admin';
@@ -65,13 +66,14 @@ function MasterListPage() {
     });
   };
   
-  const handleEditClick = (e, masterId) => {
-    e.stopPropagation();
-    navigate(`/masters/edit/${masterId}`);
-  };
-  
   const handleRowClick = (masterId) => {
     navigate(`/masters/edit/${masterId}`);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.pageCount && newPage !== pagination.page) {
+      setPagination(prev => ({ ...prev, page: newPage }));
+    }
   };
 
   if (loading && masters.length === 0) {
@@ -147,13 +149,6 @@ function MasterListPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{master.turonId}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={(e) => handleEditClick(e, master.id)}
-                      title="Tahrirlash"
-                      className="text-gray-600 hover:text-blue-600 inline-block p-1 mr-2"
-                    >
-                      <FaEdit size={16} />
-                    </button>
-                    <button
                       onClick={(e) => handleDeleteClick(e, master)}
                       title="O'chirish"
                       className="text-gray-600 hover:text-red-600 inline-block p-1"
@@ -168,29 +163,12 @@ function MasterListPage() {
         </table>
       </div>
       
-      {pagination.pageCount > 1 && (
-        <div className="flex justify-center mt-6">
-          <nav className="flex items-center">
-            <button 
-              onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-              disabled={pagination.page === 1}
-              className="px-3 py-1 rounded-md mr-2 bg-gray-200 disabled:opacity-50"
-            >
-              Oldingi
-            </button>
-            <span className="mx-2">
-              {pagination.page} / {pagination.pageCount}
-            </span>
-            <button 
-              onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.pageCount, prev.page + 1) }))}
-              disabled={pagination.page === pagination.pageCount}
-              className="px-3 py-1 rounded-md ml-2 bg-gray-200 disabled:opacity-50"
-            >
-              Keyingi
-            </button>
-          </nav>
-        </div>
-      )}
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.pageCount}
+        onPageChange={handlePageChange}
+        totalCount={pagination.totalCount}
+      />
     </div>
   );
 }

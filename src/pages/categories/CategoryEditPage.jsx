@@ -109,7 +109,7 @@ function CategoryEditPage() {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
 
-      fetch('http://localhost:4040/api/v1/admin/files', {
+      fetch(`${import.meta.env.VITE_API_URL}/files`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',

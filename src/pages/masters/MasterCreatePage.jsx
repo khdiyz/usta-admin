@@ -173,7 +173,7 @@ function MasterCreatePage() {
     formDataToSend.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:4040/api/v1/admin/files', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/files`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

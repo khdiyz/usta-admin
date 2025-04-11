@@ -52,7 +52,7 @@ function CategoryCreatePage() {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
 
-      fetch('http://localhost:4040/api/v1/admin/files', {
+      fetch(`${import.meta.env.VITE_API_URL}/files`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',
@@ -96,7 +96,7 @@ function CategoryCreatePage() {
         name: formData.name
       };
 
-      const { response, data } = await makeApiCall('http://localhost:4040/api/v1/admin/categories', {
+      const { response, data } = await makeApiCall(`${import.meta.env.VITE_API_URL}/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

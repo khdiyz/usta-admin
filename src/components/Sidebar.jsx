@@ -52,7 +52,7 @@ function Sidebar() {
     <div className={`transition-all duration-300 ease-in-out h-screen ${isOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white flex flex-col`}>
       {/* Yuqoridagi qism o'zgarishsiz qoladi */}
       <div className={`flex items-center ${isOpen ? 'justify-between' : 'justify-center'} p-4 h-16 border-b border-gray-700`}>
-        {isOpen && <span className="font-bold text-xl">Admin Panel</span>}
+        {isOpen && <span className="font-bold text-xl">Usta Admin</span>}
         <button onClick={toggleSidebar} className="text-white p-2 rounded hover:bg-gray-700 cursor-pointer">
           {isOpen ? <FaTimes /> : <FaBars />}
         </button>

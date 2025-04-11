@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast'; // Import Toaster
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import './index.css'; // Tailwind CSS
 
 // Auth Provider
@@ -19,6 +21,8 @@ import UserEditPage from './pages/users/UserEditPage';
 import MasterListPage from './pages/masters/MasterListPage';
 import MasterCreatePage from './pages/masters/MasterCreatePage';
 import ClientListPage from './pages/clients/ClientListPage';
+import ClientCreatePage from './pages/clients/ClientCreatePage';
+import ClientEditPage from './pages/clients/ClientEditPage';
 import CountryListPage from './pages/countries/CountryListPage';
 import CountryCreatePage from './pages/countries/CountryCreatePage';
 import CountryEditPage from './pages/countries/CountryEditPage';
@@ -74,8 +78,8 @@ const router = createBrowserRouter([
         path: 'clients',
         children: [
           { index: true, element: <ClientListPage /> },
-          { path: 'create', element: <NotFoundPage /> }, // To'ldirilishi kerak
-          { path: 'edit/:clientId', element: <NotFoundPage /> }, // To'ldirilishi kerak
+          { path: 'create', element: <ClientCreatePage /> },
+          { path: 'edit/:clientId', element: <ClientEditPage /> },
         ],
       },
       {
@@ -137,43 +141,57 @@ const router = createBrowserRouter([
   }
 ]);
 
+// Create a query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <AuthProvider>
-    <ModalProvider>
-      <Toaster
-           position="top-center" // Pozitsiyasi
-           reverseOrder={false}  // Yangilari tepadan chiqadi
-           toastOptions={{
-             duration: 1000, // Standart davomiylik (3 soniya)
-             style: { // Umumiy stillar (ixtiyoriy)
-               background: '#333',
-               color: '#fff',
-             },
-             success: { // Muvaffaqiyat uchun stillar
-               duration: 1000,
-               style: {
-                 background: '#28a745', // Yashil fon
-                 color: 'white',
-               },
+    <QueryClientProvider client={queryClient}>
+      <ModalProvider>
+        <Toaster
+          position="top-center" // Pozitsiyasi
+          reverseOrder={false}  // Yangilari tepadan chiqadi
+          toastOptions={{
+            duration: 1000, // Standart davomiylik (3 soniya)
+            style: { // Umumiy stillar (ixtiyoriy)
+              background: '#333',
+              color: '#fff',
+            },
+            success: { // Muvaffaqiyat uchun stillar
+              duration: 1000,
+              style: {
+                background: '#28a745', // Yashil fon
+                color: 'white',
+              },
+              iconTheme: { // Ikonka rangi
+                  primary: 'white',
+                  secondary: '#28a745',
+              },
+            },
+            error: { // Xatolik uchun stillar
+              duration: 1000, // Xatolikni ko'proq ushlab turish ham mumkin (masalan 5000)
+              style: {
+                background: '#dc3545', // Qizil fon
+                color: 'white',
+              },
                iconTheme: { // Ikonka rangi
                    primary: 'white',
-                   secondary: '#28a745',
+                   secondary: '#dc3545',
                },
-             },
-             error: { // Xatolik uchun stillar
-               duration: 1000, // Xatolikni ko'proq ushlab turish ham mumkin (masalan 5000)
-               style: {
-                 background: '#dc3545', // Qizil fon
-                 color: 'white',
-               },
-                iconTheme: { // Ikonka rangi
-                    primary: 'white',
-                    secondary: '#dc3545',
-                },
-             },
-           }}
-         />
-      <RouterProvider router={router} /> {/* Yoki <App /> agar boshqacha struktura bo'lsa */}
-    </ModalProvider>
+            },
+          }}
+        />
+        <RouterProvider router={router} /> {/* Yoki <App /> agar boshqacha struktura bo'lsa */}
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </ModalProvider>
+    </QueryClientProvider>
   </AuthProvider>
 );
